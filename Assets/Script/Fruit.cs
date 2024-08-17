@@ -8,24 +8,38 @@ public class Fruit : MonoBehaviour
     public string ID;
     /// <summary>選択状態表示Sprite</summary>
     public GameObject SelectSprite;
-
+    
+    /// <summary>選択状態</summary>
+    public bool IsSelect { get; private set; }
+     
     /// <summary>
     /// MouseDownイベント
     /// </summary>
-    private void OnMouseDown() {
-        SelectSprite.SetActive(true);
+    private void OnMouseDown() 
+    {
+        LevelManaer.Instance.FruitDown(this);
     }
     /// <summary>
     /// MouseEnterイベント
     /// </summary>
     private void OnMouseEnter() {
-        
+        LevelManaer.Instance.FruitEnter(this);
     }
     /// <summary>
     /// MouseUpイベント
     /// </summary>
     private void OnMouseUp() {
-        SelectSprite.SetActive(false);
+        LevelManaer.Instance.FruitUp();
+    }
+
+    /// <summary>
+    /// フルーツの選択状態を設定
+    /// </summary>
+    /// <param name="isSelect">選択状態</param>
+    public void SetIsSelect(bool isSelect)
+    {
+        IsSelect = isSelect;
+        SelectSprite.SetActive(isSelect);
     }
 
 }
