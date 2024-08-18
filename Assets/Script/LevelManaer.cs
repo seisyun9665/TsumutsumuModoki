@@ -5,6 +5,9 @@ using System.Linq;
 
 public class LevelManaer : MonoBehaviour
 {
+
+    /// <summary>全てのフルーツ</summary>
+    private List<Fruit> _AllFruits = new List<Fruit>();
     /// <summary>選択中のフルーツ</summary>
     private List<Fruit> _SelectFruits = new List<Fruit>();
 
@@ -15,12 +18,19 @@ public class LevelManaer : MonoBehaviour
     public static LevelManaer Instance { get; private set; }
     /// <summary>フルーツPrefabリスト</summary>
     public GameObject[] FruitPrefabs;
-    /// <summary>選択線描画</summary>
+    /// <summary>選択線描画オブジェクト</summary>
     public LineRenderer LineRenderer;
+    /// <summary>ボムPrefab</summary>
+    public GameObject BombPrefab;
     /// <summary>フルーツを消すために必要な数</summary>
     public int FruitDestroyCount = 3;
     /// <summary>フルーツをつなぐ範囲</summary>
     public float FruitConnectRange = 1.5f;
+    /// <summary>ボムを生成するために必要なフルーツの数</summary>
+    public int BombSpawnCount = 5;
+    /// <summary>ボムで消す範囲</summary>
+    public float BombDestroyRange = 1.5f;
+
     void Start()
     {
         Instance = this;
@@ -62,7 +72,8 @@ public class LevelManaer : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             var Position = new Vector3(StartX + X, StartY + Y, 0);
-            Instantiate(FruitPrefabs[Random.Range(0, FruitPrefabs.Length)], Position, Quaternion.identity);
+            var FruitObject = Instantiate(FruitPrefabs[Random.Range(0, FruitPrefabs.Length)], Position, Quaternion.identity);
+            _AllFruits.Add(FruitObject.GetComponent<Fruit>());
 
             X++;
             if (X == MaxX)
@@ -119,10 +130,16 @@ public class LevelManaer : MonoBehaviour
     /// </summary>
     public void FruitUp()
     {
+        // フルーツを3つ以上消した
         if (_SelectFruits.Count >= FruitDestroyCount)
         {
+            if (_SelectFruits.Count >= BombSpawnCount)
+            {
+                Instantiate(BombPrefab, _SelectFruits[_SelectFruits.Count - 1].transform.position, Quaternion.identity);
+            }
             DestroyFruits(_SelectFruits);
         }
+        // フルーツを消した数が3つ未満なら、選択をキャンセル
         else
         {
             foreach (var FruitItem in _SelectFruits)
@@ -136,6 +153,22 @@ public class LevelManaer : MonoBehaviour
     }
 
     /// <summary>
+    /// ボムを消した
+    /// </summary>
+    /// <param name="Bomb"></param>
+    public void BombDown(Bomb Bomb)
+    {
+        var RemoveFruits = _AllFruits.
+        Where(
+            fruit =>
+            (Bomb.transform.position - fruit.transform.position).magnitude < BombDestroyRange
+            ).ToList();
+
+        DestroyFruits(RemoveFruits);
+        Destroy(Bomb.gameObject);
+    }
+
+    /// <summary>
     /// フルーツを消す
     /// </summary>
     /// <param name="fruits">消すフルーツ</param>
@@ -144,6 +177,7 @@ public class LevelManaer : MonoBehaviour
         foreach (var FruitItem in fruits)
         {
             Destroy(FruitItem.gameObject);
+            _AllFruits.Remove(FruitItem);
         }
 
         FruitSpawn(fruits.Count);
