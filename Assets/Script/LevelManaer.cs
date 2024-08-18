@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class LevelManaer : MonoBehaviour
 {
@@ -11,9 +12,11 @@ public class LevelManaer : MonoBehaviour
     private string _SelectID = "";
 
     /// <summary>シングルトンインスタンス</summary>
-    public static LevelManaer Instance {get; private set; }
+    public static LevelManaer Instance { get; private set; }
     /// <summary>フルーツPrefabリスト</summary>
     public GameObject[] FruitPrefabs;
+    /// <summary>選択線描画</summary>
+    public LineRenderer LineRenderer;
     /// <summary>フルーツを消すために必要な数</summary>
     public int FruitDestroyCount = 3;
     /// <summary>フルーツをつなぐ範囲</summary>
@@ -27,7 +30,21 @@ public class LevelManaer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        LineRendererUpdate();
+    }
+
+    /// <summary>
+    /// 選択中のフルーツをつなぐ線の描画を更新
+    /// </summary>
+    private void LineRendererUpdate()
+    {
+        if (_SelectFruits.Count >= 2)
+        {
+            LineRenderer.positionCount = _SelectFruits.Count;
+            LineRenderer.SetPositions(_SelectFruits.Select(fruit => fruit.transform.position).ToArray());
+            LineRenderer.gameObject.SetActive(true);
+        }
+        else LineRenderer.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -45,10 +62,10 @@ public class LevelManaer : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             var Position = new Vector3(StartX + X, StartY + Y, 0);
-            Instantiate(FruitPrefabs[Random.Range(0,FruitPrefabs.Length)], Position, Quaternion.identity);
+            Instantiate(FruitPrefabs[Random.Range(0, FruitPrefabs.Length)], Position, Quaternion.identity);
 
             X++;
-            if(X==MaxX)
+            if (X == MaxX)
             {
                 X = 0;
                 Y++;
@@ -74,11 +91,11 @@ public class LevelManaer : MonoBehaviour
     /// <param name="fruit">フルーツ</param>
     public void FruitEnter(Fruit fruit)
     {
-        if(_SelectID != fruit.ID) return;
+        if (_SelectID != fruit.ID) return;
 
-        if(fruit.IsSelect)
+        if (fruit.IsSelect)
         {
-            if(_SelectFruits.Count >= 2 && fruit.ID == _SelectFruits[_SelectFruits.Count - 2].ID)
+            if (_SelectFruits.Count >= 2 && fruit.ID == _SelectFruits[_SelectFruits.Count - 2].ID)
             {
                 var RemoveFruit = _SelectFruits[_SelectFruits.Count - 1];
                 _SelectFruits.Remove(RemoveFruit);
@@ -89,7 +106,7 @@ public class LevelManaer : MonoBehaviour
         {
             var Length = (_SelectFruits[_SelectFruits.Count - 1].transform.position - fruit.transform.position).magnitude;
 
-            if(Length < FruitConnectRange)
+            if (Length < FruitConnectRange)
             {
                 _SelectFruits.Add(fruit);
                 fruit.SetIsSelect(true);
@@ -102,7 +119,7 @@ public class LevelManaer : MonoBehaviour
     /// </summary>
     public void FruitUp()
     {
-        if(_SelectFruits.Count >= FruitDestroyCount)
+        if (_SelectFruits.Count >= FruitDestroyCount)
         {
             DestroyFruits(_SelectFruits);
         }
@@ -124,7 +141,7 @@ public class LevelManaer : MonoBehaviour
     /// <param name="fruits">消すフルーツ</param>
     private void DestroyFruits(List<Fruit> fruits)
     {
-        foreach(var FruitItem in fruits)
+        foreach (var FruitItem in fruits)
         {
             Destroy(FruitItem.gameObject);
         }
