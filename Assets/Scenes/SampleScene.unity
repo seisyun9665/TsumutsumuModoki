@@ -927,6 +927,7 @@ MonoBehaviour:
   - {fileID: 1660801045158697580, guid: 530c9d7d69ff240839e6acf8a19a38a1, type: 3}
   LineRenderer: {fileID: 2037628517}
   BombPrefab: {fileID: 5391035633565202400, guid: 899b2890135d04435b6f64a8555aa260, type: 3}
+  ScoreText: {fileID: 715882437}
   FruitDestroyCount: 3
   FruitConnectRange: 1.5
   BombSpawnCount: 5
