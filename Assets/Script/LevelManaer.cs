@@ -17,6 +17,10 @@ public class LevelManaer : MonoBehaviour
 
     /// <summary>スコア</summary>
     private int _Score = 0;
+    /// <summary>現在時間[s]</summary>
+    private float _CurrentTime = 0;
+    /// <summary>プレイ中状態</summary>
+    private bool _IsPlaying = true;
 
     /// <summary>シングルトンインスタンス</summary>
     public static LevelManaer Instance { get; private set; }
@@ -28,6 +32,11 @@ public class LevelManaer : MonoBehaviour
     public GameObject BombPrefab;
     /// <summary>スコア表示テキスト</summary>
     public TextMeshProUGUI ScoreText;
+    /// <summary>時間表示テキスト</summary>
+    public TextMeshProUGUI TimerText;
+    /// <summary>ゲーム終了画面</summary>
+    public GameObject FinishDialog;
+
     /// <summary>フルーツを消すために必要な数</summary>
     public int FruitDestroyCount = 3;
     /// <summary>フルーツをつなぐ範囲</summary>
@@ -36,18 +45,45 @@ public class LevelManaer : MonoBehaviour
     public int BombSpawnCount = 5;
     /// <summary>ボムで消す範囲</summary>
     public float BombDestroyRange = 1.5f;
+    /// <summary>プレイ時間</summary>
+    public float PlayTime = 60;
 
     void Start()
     {
         Instance = this;
         FruitSpawn(60);
         ScoreText.text = "0";
+        _CurrentTime = PlayTime;
+
     }
 
     // Update is called once per frame
     void Update()
     {
         LineRendererUpdate();
+        TimerUpdate();
+    }
+
+    /// <summary>
+    /// 時間更新
+    /// </summary>
+    private void TimerUpdate()
+    {
+        if (_IsPlaying)
+        {
+            _CurrentTime -= Time.deltaTime;
+            if (_CurrentTime <= 0)
+            {
+                _CurrentTime = 0;
+
+                // ゲーム終了時に繋げていたフルーツを強制的に消す
+                FruitUp();
+
+                _IsPlaying = false;
+                FinishDialog.SetActive(true);
+            }
+            TimerText.text = ((int)_CurrentTime).ToString();
+        }
     }
 
     /// <summary>
@@ -97,6 +133,8 @@ public class LevelManaer : MonoBehaviour
     /// <param name="fruit">フルーツ</param>
     public void FruitDown(Fruit fruit)
     {
+        if (!_IsPlaying) return;
+
         _SelectFruits.Add(fruit);
         fruit.SetIsSelect(true);
 
@@ -109,6 +147,8 @@ public class LevelManaer : MonoBehaviour
     /// <param name="fruit">フルーツ</param>
     public void FruitEnter(Fruit fruit)
     {
+        if (!_IsPlaying) return;
+
         if (_SelectID != fruit.ID) return;
 
         if (fruit.IsSelect)
@@ -137,6 +177,7 @@ public class LevelManaer : MonoBehaviour
     /// </summary>
     public void FruitUp()
     {
+        if (!_IsPlaying) return;
         // フルーツを3つ以上消した
         if (_SelectFruits.Count >= FruitDestroyCount)
         {
@@ -160,11 +201,12 @@ public class LevelManaer : MonoBehaviour
     }
 
     /// <summary>
-    /// ボムを消した
+    /// ボムを押した
     /// </summary>
     /// <param name="Bomb"></param>
     public void BombDown(Bomb Bomb)
     {
+        if (!_IsPlaying) return;
         var RemoveFruits = _AllFruits.
         Where(
             fruit =>
