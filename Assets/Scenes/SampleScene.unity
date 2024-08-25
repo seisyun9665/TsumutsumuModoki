@@ -1220,7 +1220,7 @@ MonoBehaviour:
   FruitConnectRange: 1.5
   BombSpawnCount: 5
   BombDestroyRange: 1.5
-  PlayTime: 5
+  PlayTime: 60
 --- !u!4 &1345520122
 Transform:
   m_ObjectHideFlags: 0
